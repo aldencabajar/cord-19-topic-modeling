@@ -8,6 +8,7 @@ import spacy
 import wordcloud
 import sys
 import argparse
+from functools import reduce
 sys.path.append('langid.py/')
 import langid
 
@@ -20,6 +21,11 @@ def unzip_files(path_to_zip, path_to_dir, quiet = False):
     os.system(cmd)
 
 def get_total_lengths(dir, total_num_docs = None):
+    """
+        Determines the total character length (with spaces) of a document.
+        Returns a pandas dataframe with sha and length as fields
+    """
+
     docs = os.listdir(dir)
     
     doc_lengths = []
@@ -44,6 +50,10 @@ def get_total_lengths(dir, total_num_docs = None):
     return doc_length_df
 
 def identify_language(metadata):
+    """
+        Determines the language of the document based on its title.
+        Returns pandas dataframe with sha and language code as fields.
+    """
     df = metadata.copy()
     langs = []
     for title in tqdm(df.title.tolist()):       
@@ -54,16 +64,19 @@ def identify_language(metadata):
         langs.append(lang)
     df['langs'] = langs
 
-    return df
+    return df[['sha','langs']]
 
 
 
 
 if __name__ == '__main__':
+    # Output is a pandas series of sha 
+
     parser = argparse.ArgumentParser()
     parser.add_argument('zip_path', type = str, help ='path to zipped cord-19 dataset.')
     parser.add_argument('path_to_dir', type = str,help = 'path to store unzipped files')
     parser.add_argument('doc_src_type', choices = ['pdf', 'pmc'])
+    parser.add_argument('output_path', type=str, help= 'path to store output of final list of files.')
     parser.add_argument('-n','--doc_length', type = int, help = 'maximum document length')
     parser.add_argument('-q', '--quiet', type=bool, nargs='?', default=True, help= 'do not print out processing.')
 
@@ -77,12 +90,29 @@ if __name__ == '__main__':
     unzip_files(path_to_zip = args.zip_path, path_to_dir = args.path_to_dir, 
     quiet=args.quiet)
 
-    # get path to metadata
+    # get relevant paths/files 
     metadata = pd.read_csv(f'{path_to_dir}/metadata.csv')
+    doc_src_type_path = f'{path_to_dir}/{args.doc_src_type}_json'
 
     # get document lengths
-    
+    doc_lengths = get_total_lengths(doc_src_type_path) 
 
+    # get probable language
+    doc_lang = identify_language(metadata)
 
+    # join relevant dataframes
+    df_list = [doc_lengths, doc_lang]
+    reqs_all = reduce(lambda x, y: pd.merge(x, y, on = 'sha'), df_list)
 
+    # apply filters (maximum doc length, language)
+    apply_cnd = np.logical_and.reduce(
+        np.concatenate(
+            [reqs_all.length <= args.doc_length,
+            reqs_all.langs == 'en'],
+            axis = 1
+        ),
+        axis = 1
+    )
 
+    final_sha = reqs_all[apply_cnd]['sha']
+    final_sha.to_pickle(args.output_path)
