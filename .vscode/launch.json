@@ -5,13 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "preproc debug",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "pythonPath": "python3",
-            "args": ["/root/", "tmp/", "pdf"] 
+            "python": "/usr/bin/python3",
+            "args": [
+                "~/cord-19-research-challenge/", 
+                "tmp/", 
+                "pdf",
+                "--zip_path=~/drive/MyDrive/CORD-19-research-challenge.zip",
+            ] 
         }
     ]
 }
