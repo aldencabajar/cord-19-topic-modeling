@@ -73,9 +73,9 @@ if __name__ == '__main__':
     # Output is a pandas series of sha 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('zip_path', type = str, help ='path to zipped cord-19 dataset.')
-    parser.add_argument('path_to_dir', type = str,help = 'path to store unzipped files')
-    parser.add_argument('doc_src_type', choices = ['pdf', 'pmc'])
+    parser.add_argument('path_to_dir', type = str,help = 'path to unzipped files. This also specifies the path when unzipping.')
+    parser.add_argument('doc_src_type', choices = ['pdf', 'pmc'], help = 'what document parsed documents should be used?')
+    parser.add_argument( '-f', '--zip_path', type = str, help ='path to zipped cord-19 dataset.')
     parser.add_argument('output_path', type=str, help= 'path to store output of final list of files.')
     parser.add_argument('-n','--doc_length', type = int, help = 'maximum document length')
     parser.add_argument('-q', '--quiet', type=bool, nargs='?', default=True, help= 'do not print out processing.')
