@@ -1,0 +1,5 @@
+numpy
+tensorflow
+spacy==2.3.5
+transformers
+pandas
